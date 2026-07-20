@@ -1,4 +1,44 @@
-# SG Guard — working prototype
+# SG Guard
+
+**A trust-first defence against AI-personalised scams — built for Singapore's seniors, not around them.**
+
+## The Problem
+
+Singapore's seniors are digitally comfortable but not digitally confident — a gap generative AI has turned into a public-safety crisis. Government-impersonation scams rose 124% year-on-year, with elderly victims losing an average of S$37,053 each, manipulated into transferring money themselves. Static defences like keyword blacklists can't keep pace with an adversary that drafts a personalised script in seconds or clones a voice from three seconds of audio.
+
+## The Approach
+
+Instead of racing generative AI on detection speed, SG Guard uses AI to support human judgement. Seniors share a suspicious message by **typing, photographing, or speaking it**. A schema-locked Gemini backend reads the message for manipulation *tactics* rather than keywords, returning one of three honest, schema-enforced verdicts:
+
+- 🟢 **Safe**
+- 🟡 **Unsure** — a deliberate fairness decision, so the model never fakes certainty on a genuinely ambiguous message
+- 🔴 **Warning** — with each flagged tactic explained in plain language
+
+Every result ends in a **one-tap handoff to a trusted person**, keeping the AI as a second opinion rather than the final word.
+
+## Design Principles
+
+- **Honesty over confidence** — interface copy matches what the backend actually does (a mid-project audit caught and corrected a false "never leaves this screen" privacy claim)
+- **No forced inputs** — three ways in (type, photo, speech), never forcing the input a senior trusts least
+- **Calibrated uncertainty** — a hard-constrained JSON schema keeps "unsure" a real, reachable state rather than one the model could collapse out of under pressure
+- **Civic infrastructure framing** — digital safety treated like Singapore's physical priority infrastructure, not a personal gadget seniors must master alone
+
+## Limitations
+
+- No formal participatory testing with seniors at an Active Ageing Centre yet (biggest open gap)
+- English only — no Mandarin, Malay, Tamil, or dialect support
+- "Add someone you trust" contact feature is currently a placeholder
+- Cost and latency at real scale remain unvalidated
+
+## Grounded In
+
+Lim & Tan (2003) · Ma (2023) · Zhai et al. (2025) · LaRubbio et al. (2025) · Roy & Nilizadeh (2024) · Singapore Police Force Annual Scam & Cybercrime Brief 2025
+
+*AI and Design — Final Project, 2026 · Carwyn Yeo · Lam Yan Yee*
+
+---
+
+# Working Prototype
 
 This wires our HTML prototype up to a real backend that calls the **Google
 Gemini API** (`gemini-3.5-flash`) to actually analyse messages — typed text,
