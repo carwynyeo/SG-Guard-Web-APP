@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SG Guard — Portal Prototype (Trust-First)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16303D;
+    --gold:#B8863A;
+    --cream:#F7F1E6;
+    --paper:#FFFFFF;
+    --coral:#B8563F;
+    --coral-bg:#FBEEE9;
+    --sage:#4F7A55;
+    --sage-bg:#EAF2E9;
+    --line:#E4D9C2;
+    --ink-soft:#40545F;
+    --fs-scale:1;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Source Sans 3', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 14px 60px;
+  }
+
+  /* ---------------- device frame ---------------- */
+  .portal{
+    width:100%;
+    max-width:460px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:28px;
+    box-shadow:0 30px 60px -30px rgba(22,48,61,0.35);
+    overflow:hidden;
+    font-size:calc(1em * var(--fs-scale));
+  }
+
+  /* top bar: identity + human reassurance, always visible */
+  .portal-header{
+    background:var(--ink);
+    color:var(--cream);
+    padding:20px 22px 18px;
+    text-align:center;
+    position:relative;
+  }
+  .portal-header .mark{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--gold);
+    text-transform:uppercase;
+  }
+  .mark-dot{width:7px;height:7px;border-radius:50%;background:var(--sage);}
+  .portal-header h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:calc(24px * var(--fs-scale));
+    margin:8px 0 4px;
+  }
+  .portal-header p{
+    margin:0;
+    font-size:calc(14px * var(--fs-scale));
+    color:#CBD8DC;
+  }
+
+  /* Always-visible accessibility strip: text size + read aloud + help */
+  .a11y-strip{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:#0F262F;
+    padding:10px 16px;
+    border-top:1px solid #24424F;
+  }
+  .a11y-group{display:flex; align-items:center; gap:6px;}
+  .a11y-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    color:#8FA3AA;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+  .a11y-btn{
+    background:#1B3A45;
+    border:1px solid #2E505C;
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 11px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+  }
+  .a11y-btn.active{background:var(--gold); border-color:var(--gold); color:var(--ink);}
+  .help-btn{
+    background:#1B3A45;
+    border:1px solid #2E505C;
+    color:var(--cream);
+    border-radius:8px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+    display:flex; align-items:center; gap:5px;
+  }
+
+  .screen{padding:26px 24px 28px;}
+  .hidden{display:none;}
+
+  /* progress dots so people always know where they are / that there IS an end */
+  .steps-track{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin-bottom:20px;
+  }
+  .step-dot{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .step-dot.done{background:var(--gold);}
+  .step-dot.current{background:var(--ink); width:20px; border-radius:5px;}
+
+  /* ---- Onboarding / welcome screen ---- */
+  .welcome-icon{
+    width:64px;height:64px;
+    border-radius:50%;
+    background:var(--sage-bg);
+    color:var(--sage);
+    display:flex; align-items:center; justify-content:center;
+    font-size:30px;
+    margin:0 auto 18px;
+  }
+  .welcome-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:calc(24px * var(--fs-scale));
+    text-align:center;
+    margin:0 0 12px;
+    line-height:1.3;
+  }
+  .welcome-body{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:calc(16px * var(--fs-scale));
+    line-height:1.6;
+    margin:0 0 22px;
+  }
+  .promise-list{
+    list-style:none;
+    margin:0 0 24px;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .promise-list li{
+    display:flex; align-items:flex-start; gap:12px;
+    background:var(--sage-bg);
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:calc(14.5px * var(--fs-scale));
+    color:var(--ink);
+    line-height:1.5;
+  }
+  .promise-icon{
+    flex:none; width:26px; height:26px; border-radius:50%;
+    background:var(--sage); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700;
+  }
+
+  /* ---- input screen ---- */
+  .prompt-label{
+    font-family:'Fraunces', serif;
+    font-size:calc(21px * var(--fs-scale));
+    font-weight:600;
+    margin:0 0 8px;
+    line-height:1.35;
+  }
+  .prompt-sub{
+    color:var(--ink-soft);
+    font-size:calc(15px * var(--fs-scale));
+    margin:0 0 18px;
+    line-height:1.5;
+  }
+  .try-sample-row{
+    display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .try-sample-btn{
+    background:var(--cream);
+    border:1.5px dashed var(--gold);
+    color:var(--ink);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:calc(13px * var(--fs-scale));
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+    font-weight:600;
+  }
+
+  /* ---- input method row: photo upload + voice, alternatives to typing ---- */
+  .input-methods-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .method-btn{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    background:var(--paper);
+    border:1.5px dashed var(--gold);
+    border-radius:14px;
+    padding:14px 8px;
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+    color:var(--ink);
+    min-height:74px;
+  }
+  .method-btn .method-icon{ font-size:22px; }
+  .method-btn .method-label{
+    font-size:calc(13px * var(--fs-scale));
+    font-weight:700;
+    line-height:1.25;
+    text-align:center;
+  }
+  .method-btn.recording{
+    background:var(--gold);
+    border-style:solid;
+    color:#fff;
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  .method-divider{
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 14px;
+  }
+
+  /* ---- photo preview card, shown after a photo is added ---- */
+  .photo-preview-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:#FBF8F1;
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:14px;
+  }
+  .photo-preview-card.hidden{ display:none; }
+  .photo-preview-card img{
+    width:56px; height:56px;
+    object-fit:cover;
+    border-radius:10px;
+    flex:none;
+    border:1px solid var(--line);
+  }
+  .photo-preview-info{ flex:1; min-width:0; }
+  .photo-preview-info b{
+    display:block;
+    font-size:calc(14px * var(--fs-scale));
+  }
+  .photo-preview-info span{
+    display:block;
+    font-size:calc(12.5px * var(--fs-scale));
+    color:var(--ink-soft);
+  }
+  .photo-remove-btn{
+    flex:none;
+    background:none;
+    border:1.5px solid var(--line);
+    color:var(--ink-soft);
+    border-radius:50%;
+    width:32px; height:32px;
+    font-size:16px;
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+  }
+  .result-photo{
+    width:100%;
+    border-radius:14px;
+    border:1px solid var(--line);
+    margin-bottom:14px;
+    display:block;
+  }
+  .result-photo.hidden{ display:none; }
+  textarea{
+    width:100%;
+    min-height:120px;
+    border:2px solid var(--line);
+    border-radius:14px;
+    background:#FBF8F1;
+    padding:16px;
+    font-family:'Source Sans 3', sans-serif;
+    font-size:calc(17px * var(--fs-scale));
+    color:var(--ink);
+    resize:none;
+    line-height:1.5;
+  }
+  textarea:focus{outline:3px solid var(--gold); outline-offset:1px; border-color:var(--gold);}
+
+  .primary-btn{
+    width:100%;
+    margin-top:16px;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    padding:19px;
+    font-family:'Source Sans 3', sans-serif;
+    font-size:calc(18px * var(--fs-scale));
+    font-weight:800;
+    cursor:pointer;
+    min-height:60px;
+  }
+  .secondary-btn{
+    width:100%;
+    margin-top:10px;
+    background:transparent;
+    color:var(--ink-soft);
+    border:2px solid var(--line);
+    border-radius:16px;
+    padding:15px;
+    font-family:'Source Sans 3', sans-serif;
+    font-size:calc(15.5px * var(--fs-scale));
+    font-weight:700;
+    cursor:pointer;
+    min-height:52px;
+  }
+  .ghost-link{
+    display:block;
+    text-align:center;
+    margin-top:16px;
+    font-size:calc(14px * var(--fs-scale));
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    width:100%;
+    font-family:'Source Sans 3', sans-serif;
+    min-height:44px;
+  }
+
+  /* ---- loading (calm, explains itself, no jargon) ---- */
+  .loading-wrap{ padding:50px 20px; text-align:center; }
+  .pulse-circle{
+    width:64px;height:64px;
+    margin:0 auto 22px;
+    border-radius:50%;
+    background:var(--sage-bg);
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.08); }
+  }
+  .loading-wrap .lt{
+    font-family:'Fraunces', serif;
+    font-size:calc(18px * var(--fs-scale));
+    font-weight:600;
+    margin:0 0 8px;
+  }
+  .loading-wrap .ls{
+    font-size:calc(13.5px * var(--fs-scale));
+    color:var(--ink-soft);
+  }
+
+  /* ---- result: warn ---- */
+  .verdict-row{
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:16px;
+  }
+  .verdict-icon{
+    width:48px;height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex:none;
+  }
+  .verdict-icon.warn{ background:var(--coral-bg); color:var(--coral); }
+  .verdict-icon.safe{ background:var(--sage-bg); color:var(--sage); }
+  .verdict-icon.unsure{ background:#F3E6CC; color:var(--gold); }
+  .verdict-title{
+    font-family:'Fraunces', serif;
+    font-size:calc(20px * var(--fs-scale));
+    font-weight:600;
+    margin:0;
+    line-height:1.3;
+  }
+  .verdict-sub{
+    color:var(--ink-soft);
+    font-size:calc(15px * var(--fs-scale));
+    margin:0 0 20px;
+    line-height:1.55;
+  }
+  .listen-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--cream);
+    border:1.5px solid var(--line);
+    color:var(--ink);
+    border-radius:999px;
+    padding:9px 16px;
+    font-size:calc(13.5px * var(--fs-scale));
+    font-weight:700;
+    cursor:pointer;
+    margin-bottom:18px;
+    font-family:'Source Sans 3', sans-serif;
+  }
+  .listen-btn.speaking{ background:var(--gold); color:#fff; border-color:var(--gold); }
+
+  .message-preview{
+    background:#FBF8F1;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    font-size:calc(15px * var(--fs-scale));
+    line-height:1.65;
+    margin-bottom:20px;
+  }
+  mark{
+    background:#F2D6C6;
+    color:var(--coral);
+    padding:1px 4px;
+    border-radius:4px;
+    font-weight:700;
+  }
+  .tactic-list{
+    list-style:none;
+    margin:0 0 24px;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .tactic-list li{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 15px;
+    font-size:calc(14.5px * var(--fs-scale));
+    line-height:1.5;
+  }
+  .tactic-icon{
+    flex:none;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:var(--coral-bg);
+    color:var(--coral);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:700;
+  }
+  .tactic-list b{display:block; margin-bottom:2px;}
+
+  .no-blame{
+    background:var(--sage-bg);
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:calc(13.5px * var(--fs-scale));
+    color:var(--ink);
+    margin-bottom:22px;
+    line-height:1.55;
+  }
+
+  .connect-heading{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .contact-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    cursor:pointer;
+    text-align:left;
+    font-family:'Source Sans 3', sans-serif;
+    min-height:68px;
+  }
+  .contact-avatar{
+    width:44px;height:44px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:16px;
+    flex:none;
+  }
+  .contact-info b{display:block; font-size:calc(15.5px * var(--fs-scale));}
+  .contact-info span{font-size:calc(12.5px * var(--fs-scale)); color:var(--ink-soft);}
+
+  .dismiss-link{
+    display:block;
+    text-align:center;
+    margin-top:16px;
+    font-size:calc(14px * var(--fs-scale));
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    width:100%;
+    font-family:'Source Sans 3', sans-serif;
+    min-height:44px;
+  }
+
+  .safe-icon{
+    width:60px;height:60px;
+    border-radius:50%;
+    background:var(--sage-bg);
+    color:var(--sage);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    margin-bottom:16px;
+  }
+
+  /* persistent bottom help bar — always an exit to a human */
+  .bottom-help{
+    border-top:1px solid var(--line);
+    padding:14px 24px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .bottom-help button{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:calc(13px * var(--fs-scale));
+    font-family:'Source Sans 3', sans-serif;
+    text-decoration:underline;
+    cursor:pointer;
+    min-height:44px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:26px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--cream);
+    padding:14px 22px;
+    border-radius:12px;
+    font-size:14.5px;
+    font-family:'Source Sans 3', sans-serif;
+    box-shadow:0 12px 30px -10px rgba(0,0,0,0.4);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    max-width:90vw;
+    text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+
+  /* modal for "what does this mean" plain-language help */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(22,48,61,0.55);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .modal-overlay.show{opacity:1; pointer-events:auto;}
+  .modal-sheet{
+    background:var(--paper);
+    width:100%; max-width:460px;
+    border-radius:22px 22px 0 0;
+    padding:26px 24px 30px;
+    transform:translateY(20px);
+    transition:transform .2s ease;
+  }
+  .modal-overlay.show .modal-sheet{transform:translateY(0);}
+  .modal-sheet h3{
+    font-family:'Fraunces', serif;
+    font-size:calc(19px * var(--fs-scale));
+    margin:0 0 10px;
+  }
+  .modal-sheet p{
+    font-size:calc(14.5px * var(--fs-scale));
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 18px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="portal">
+    <div class="portal-header">
+      <div class="mark"><span class="mark-dot"></span> SG Guard</div>
+      <h1>Not sure about a message?</h1>
+      <p>Let's look at it together.</p>
+    </div>
+
+    <!-- Always-visible comfort controls -->
+    <div class="a11y-strip">
+      <div class="a11y-group">
+        <span class="a11y-label">Text size</span>
+        <button class="a11y-btn" id="fsA" onclick="setScale(1)">A</button>
+        <button class="a11y-btn" id="fsB" onclick="setScale(1.22)">A+</button>
+        <button class="a11y-btn" id="fsC" onclick="setScale(1.45)">A++</button>
+      </div>
+      <button class="help-btn" onclick="openModal()">? Help</button>
+    </div>
+
+    <!-- Screen 0: Welcome / trust onboarding -->
+    <div class="screen" id="screen-welcome">
+      <div class="steps-track">
+        <span class="step-dot current"></span><span class="step-dot"></span><span class="step-dot"></span>
+      </div>
+      <div class="welcome-icon">🛡</div>
+      <p class="welcome-title">Welcome. You're in a safe place.</p>
+      <p class="welcome-body">SG Guard helps you check messages, calls, or notices you're not sure about — quietly, and without judging you for asking.</p>
+      <ul class="promise-list">
+        <li><span class="promise-icon">✓</span><span>Your message is sent securely to be checked, then deleted straight after. We don't keep a copy or show it to anyone.</span></li>
+        <li><span class="promise-icon">✓</span><span>It is never sold, and never shared with advertisers or other companies.</span></li>
+        <li><span class="promise-icon">✓</span><span>There is no wrong question. Checking a message is always the right thing to do.</span></li>
+      </ul>
+      <button class="primary-btn" onclick="jumpTo('input')">Start — it only takes a moment</button>
+      <button class="ghost-link" onclick="jumpTo('input'); loadSample('scam', true)">Show me an example first</button>
+      <button class="ghost-link" onclick="openModal()" style="margin-top:2px;">Where does my message actually go?</button>
+    </div>
+
+    <!-- Screen 1: input -->
+    <div class="screen hidden" id="screen-input">
+      <div class="steps-track">
+        <span class="step-dot done"></span><span class="step-dot current"></span><span class="step-dot"></span>
+      </div>
+      <p class="prompt-label">Share the message below</p>
+      <p class="prompt-sub">However is easiest for you: type it, upload a photo of it, or just speak it out loud. Take your time.</p>
+
+      <div class="input-methods-row">
+        <button class="method-btn" id="photoMethodBtn" onclick="triggerPhotoUpload()">
+          <span class="method-icon">📷</span>
+          <span class="method-label">Upload a photo</span>
+        </button>
+        <button class="method-btn" id="voiceMethodBtn" onclick="toggleVoiceInput()">
+          <span class="method-icon" id="voiceIcon">🎤</span>
+          <span class="method-label" id="voiceLabel">Speak it instead</span>
+        </button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoChange(event)">
+
+      <div class="method-divider">or type it yourself</div>
+
+      <div class="try-sample-row">
+        <button class="try-sample-btn" onclick="loadSample('scam')">Try an example message</button>
+      </div>
+
+      <div class="photo-preview-card hidden" id="photoPreviewCard">
+        <img id="photoPreviewImg" alt="Uploaded photo of the message">
+        <div class="photo-preview-info">
+          <b>Photo added</b>
+          <span id="photoPreviewStatus">Reading the words in your photo…</span>
+        </div>
+        <button class="photo-remove-btn" onclick="removePhoto()" aria-label="Remove photo">×</button>
+      </div>
+
+      <textarea id="msgBox" placeholder="For example: 'Your CPF account will be suspended...'"></textarea>
+      <button class="primary-btn" onclick="startCheck()">Check this for me</button>
+      <button class="ghost-link" onclick="jumpTo('welcome')">← Back</button>
+    </div>
+
+    <!-- Screen 2: loading -->
+    <div class="screen hidden" id="screen-loading">
+      <div class="loading-wrap">
+        <div class="pulse-circle">🔍</div>
+        <p class="lt">Checking against known scam patterns…</p>
+        <p class="ls">Sent securely for a moment, then deleted. Nothing is stored.</p>
+      </div>
+    </div>
+
+    <!-- Screen 3a: warning result -->
+    <div class="screen hidden" id="screen-warn">
+      <div class="steps-track">
+        <span class="step-dot done"></span><span class="step-dot done"></span><span class="step-dot current"></span>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-icon warn">⚠</div>
+        <h2 class="verdict-title">This one is worth a second look.</h2>
+      </div>
+      <p class="verdict-sub" id="warnSub">That doesn't mean it's definitely fake — but a few things in it are common in scam messages. Let's look at why, together.</p>
+
+      <button class="listen-btn" id="listenBtn" onclick="toggleListen()">🔊 Read this out loud</button>
+
+      <img class="result-photo hidden" id="warnPhoto" alt="The photo you uploaded">
+      <div class="message-preview" id="warnPreview"></div>
+
+      <ul class="tactic-list" id="tacticList"></ul>
+
+      <div class="no-blame">You did the right thing by checking. Scam messages are made by professionals to fool anyone — this has nothing to do with you.</div>
+
+      <p class="connect-heading">Talk it through with someone you trust</p>
+      <button class="contact-btn" onclick="showToast('Calling Mei Ling…')">
+        <span class="contact-avatar">ML</span>
+        <span class="contact-info"><b>Mei Ling</b><span>Usually picks up quickly</span></span>
+      </button>
+      <button class="contact-btn" onclick="showToast('Connecting you to the centre…')">
+        <span class="contact-avatar">PA</span>
+        <span class="contact-info"><b>Tanjong Pagar Active Ageing Centre</b><span>A real person is available now</span></span>
+      </button>
+      <button class="contact-btn" style="border-style:dashed; border-color:var(--line); color:var(--ink-soft);" onclick="showToast('In the full version, you can add anyone you trust here.')">
+        <span class="contact-avatar" style="background:var(--cream); color:var(--ink-soft); border:1.5px dashed var(--line);">+</span>
+        <span class="contact-info"><b>Add someone you trust</b><span>A neighbour, friend, grandchild — your choice</span></span>
+      </button>
+
+      <button class="dismiss-link" onclick="resetPortal()">I've checked — this is fine, go back</button>
+    </div>
+
+    <!-- Screen 3c: unsure result -->
+    <div class="screen hidden" id="screen-unsure">
+      <div class="steps-track">
+        <span class="step-dot done"></span><span class="step-dot done"></span><span class="step-dot current"></span>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-icon unsure">?</div>
+        <h2 class="verdict-title">We're honestly not sure about this one.</h2>
+      </div>
+      <p class="verdict-sub" id="unsureSub">It has a mix of signals — some look normal, some are worth a second opinion. That's a real answer, not us avoiding the question.</p>
+
+      <div class="message-preview" id="unsurePreview"></div>
+
+      <ul class="tactic-list" id="unsureList"></ul>
+
+      <div class="no-blame">When we're not sure, the safest move is to ask a real person before doing anything the message asks — never the other way around.</div>
+
+      <p class="connect-heading">Talk it through with someone you trust</p>
+      <button class="contact-btn" onclick="showToast('Calling Mei Ling…')">
+        <span class="contact-avatar">ML</span>
+        <span class="contact-info"><b>Mei Ling</b><span>Usually picks up quickly</span></span>
+      </button>
+      <button class="contact-btn" onclick="showToast('Connecting you to the centre…')">
+        <span class="contact-avatar">PA</span>
+        <span class="contact-info"><b>Tanjong Pagar Active Ageing Centre</b><span>A real person is available now</span></span>
+      </button>
+
+      <button class="dismiss-link" onclick="resetPortal()">Check another message</button>
+    </div>
+
+    <!-- Screen 3b: safe result -->
+    <div class="screen hidden" id="screen-safe">
+      <div class="steps-track">
+        <span class="step-dot done"></span><span class="step-dot done"></span><span class="step-dot current"></span>
+      </div>
+      <div class="safe-icon">✓</div>
+      <h2 class="verdict-title" style="margin-bottom:10px;">This looks like an ordinary message.</h2>
+      <p class="verdict-sub" id="safeSub">We didn't find the kind of pressure or scare tactics that scam messages usually use. If anything still feels wrong to you, trust that feeling and ask someone anyway.</p>
+
+      <div class="message-preview" id="safePreview"></div>
+
+      <button class="secondary-btn" onclick="resetPortal()">Check another message</button>
+    </div>
+
+    <div class="bottom-help">
+      <button onclick="showToast('A real person will call you back shortly.')">🙋 I'd rather speak to a person</button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalBg(event)">
+    <div class="modal-sheet">
+      <h3>Where does my message go?</h3>
+      <p><b>1. You share it.</b> By typing, uploading a photo, or speaking — whichever is easiest for you.</p>
+      <p><b>2. It's sent securely to be checked.</b> An AI system reads it and compares it against patterns common in scam messages — urgent deadlines, requests for NRIC or bank details, threats, secrecy.</p>
+      <p><b>3. It's deleted right after.</b> We don't keep a copy, and no one else — not family, not companies, not advertisers — ever sees what you typed.</p>
+      <p>The AI can make mistakes, so treat its answer as a second opinion, not a final word. If anything still feels wrong, tap "I'd rather speak to a person" at any time — a real person is always the fallback, not the AI.</p>
+      <button class="primary-btn" onclick="closeModal()">Got it, thank you</button>
+    </div>
+  </div>
+
+<script>
+  const samples = {
+    scam: "URGENT: This is CPF Board. Your account has been flagged for suspicious activity and will be SUSPENDED in 2 hours. To avoid loss of your funds, verify your NRIC and bank details immediately via this link: bit.ly/cpf-verify-sg. Do not tell your family, this is a confidential security matter.",
+    safe: "Hi Ma, reminder that your polyclinic appointment is on Thursday 10am at Bedok Polyclinic. Bring your NRIC. Let me know if you want me to come along. Love, Wei Jie"
+  };
+
+  function loadSample(type, silent){
+    document.getElementById('msgBox').value = samples[type];
+    if(!silent) resetPortal(true);
+  }
+
+  function jumpTo(id){ show('screen-' + id); }
+
+  function show(id){
+    ['screen-welcome','screen-input','screen-loading','screen-warn','screen-unsure','screen-safe'].forEach(s=>{
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    });
+    if(id !== 'screen-warn') stopSpeaking();
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function highlightPhrases(escapedText, phrases){
+    let out = escapedText;
+    (phrases || []).forEach(phrase => {
+      const esc = escapeHtml(phrase);
+      if(esc && out.includes(esc)){
+        out = out.split(esc).join('<mark>' + esc + '</mark>');
+      }
+    });
+    return out;
+  }
+
+  async function startCheck(){
+    const text = document.getElementById('msgBox').value.trim();
+    if(!uploadedPhotoDataUrl && !text) return;
+    show('screen-loading');
+
+    const payload = uploadedPhotoDataUrl
+      ? { mode: 'photo', imageDataUrl: uploadedPhotoDataUrl, caption: text }
+      : { mode: 'text', text: text };
+
+    try{
+      const res = await fetch('/api/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Request failed (${res.status})`);
+      }
+      const data = await res.json();
+      if(data.verdict === 'warning'){
+        renderWarn(data);
+        show('screen-warn');
+      } else if(data.verdict === 'unsure'){
+        renderUnsure(data);
+        show('screen-unsure');
+      } else {
+        renderSafe(data);
+        show('screen-safe');
+      }
+    } catch(err){
+      console.error('SG Guard check failed:', err);
+      show('screen-input');
+      showToast('Something went wrong checking that — please try again.');
+    }
+  }
+
+  function renderWarn(data){
+    const warnPhoto = document.getElementById('warnPhoto');
+    const sourceText = data.sourceText || '';
+    const escaped = escapeHtml(sourceText);
+    const highlighted = highlightPhrases(escaped, data.highlightPhrases);
+
+    if(uploadedPhotoDataUrl){
+      warnPhoto.src = uploadedPhotoDataUrl;
+      warnPhoto.classList.remove('hidden');
+      document.getElementById('warnPreview').innerHTML = '<b>What we read in your photo:</b><br>' + highlighted;
+    } else {
+      warnPhoto.classList.add('hidden');
+      document.getElementById('warnPreview').innerHTML = highlighted;
+    }
+
+    const warnSub = document.getElementById('warnSub');
+    if(warnSub){
+      warnSub.textContent = data.summary || "That doesn't mean it's definitely fake — but a few things in it are common in scam messages. Let's look at why, together.";
+    }
+
+    const tactics = data.tactics || [];
+    const list = document.getElementById('tacticList');
+    list.innerHTML = tactics.map(t => `
+      <li>
+        <span class="tactic-icon">${escapeHtml(t.icon || '!')}</span>
+        <span><b>${escapeHtml(t.title || '')}</b>${escapeHtml(t.explanation || '')}</span>
+      </li>`).join('');
+  }
+
+  function renderUnsure(data){
+    const escaped = escapeHtml(data.sourceText || '');
+    const highlighted = highlightPhrases(escaped, data.highlightPhrases);
+    document.getElementById('unsurePreview').innerHTML = uploadedPhotoDataUrl
+      ? '<b>What we read in your photo:</b><br>' + highlighted
+      : highlighted;
+
+    const unsureSub = document.getElementById('unsureSub');
+    if(unsureSub){
+      unsureSub.textContent = data.summary || "It has a mix of signals — some look normal, some are worth a second opinion. That's a real answer, not us avoiding the question.";
+    }
+
+    const reasons = data.tactics || [];
+    const list = document.getElementById('unsureList');
+    list.innerHTML = reasons.map(t => `
+      <li>
+        <span class="tactic-icon">${escapeHtml(t.icon || '?')}</span>
+        <span><b>${escapeHtml(t.title || '')}</b>${escapeHtml(t.explanation || '')}</span>
+      </li>`).join('');
+  }
+
+  function renderSafe(data){
+    const escaped = escapeHtml(data.sourceText || '');
+    document.getElementById('safePreview').innerHTML = uploadedPhotoDataUrl
+      ? '<b>What we read in your photo:</b><br>' + escaped
+      : escaped;
+    const safeSub = document.getElementById('safeSub');
+    if(safeSub){
+      safeSub.textContent = data.summary || "We didn't find the kind of pressure or scare tactics that scam messages usually use. If anything still feels wrong to you, trust that feeling and ask someone anyway.";
+    }
+  }
+
+  function resetPortal(keepText){
+    show('screen-input');
+    if(!keepText){
+      document.getElementById('msgBox').value = '';
+      removePhoto();
+    }
+  }
+
+  /* ---------------- photo upload (alternative to typing) ---------------- */
+  let uploadedPhotoDataUrl = null;
+
+  function triggerPhotoUpload(){
+    document.getElementById('photoInput').click();
+  }
+
+  function handlePhotoChange(event){
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      uploadedPhotoDataUrl = e.target.result;
+      document.getElementById('photoPreviewImg').src = uploadedPhotoDataUrl;
+      document.getElementById('photoPreviewCard').classList.remove('hidden');
+      document.getElementById('photoPreviewStatus').textContent = 'Reading the words in your photo…';
+      // In production, this photo is sent as-is to the AI model for analysis —
+      // this brief pause simply gives the person visible, reassuring feedback.
+      setTimeout(()=>{
+        document.getElementById('photoPreviewStatus').textContent = 'Photo added — ready to check.';
+        showToast('Photo added. Tap "Check this for me" when you\'re ready.');
+      }, 1100);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removePhoto(){
+    uploadedPhotoDataUrl = null;
+    const input = document.getElementById('photoInput');
+    if(input) input.value = '';
+    document.getElementById('photoPreviewCard').classList.add('hidden');
+  }
+
+  /* ---------------- voice input (alternative to typing) ---------------- */
+  let recognition = null;
+  let recording = false;
+
+  function toggleVoiceInput(){
+    const btn = document.getElementById('voiceMethodBtn');
+    const icon = document.getElementById('voiceIcon');
+    const label = document.getElementById('voiceLabel');
+
+    if(recording){
+      if(recognition) recognition.stop();
+      stopRecordingUI(btn, icon, label);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if(!SpeechRecognition){
+      // Fallback for browsers/previews without speech support: simulate the transcription
+      // step so the flow can still be demonstrated end-to-end.
+      startRecordingUI(btn, icon, label);
+      showToast('Listening… (demo mode)');
+      setTimeout(()=>{
+        document.getElementById('msgBox').value = samples.scam;
+        stopRecordingUI(btn, icon, label);
+        showToast('Here\'s what we heard — please check it looks right.');
+      }, 2200);
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-SG';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = function(e){
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('msgBox').value = transcript;
+      showToast('Here\'s what we heard — please check it looks right.');
+    };
+    recognition.onerror = function(){
+      showToast('We couldn\'t hear that clearly — please try again, or type instead.');
+    };
+    recognition.onend = function(){
+      stopRecordingUI(btn, icon, label);
+    };
+
+    startRecordingUI(btn, icon, label);
+    showToast('Listening… speak now');
+    recognition.start();
+  }
+
+  function startRecordingUI(btn, icon, label){
+    recording = true;
+    btn.classList.add('recording');
+    icon.textContent = '⏺';
+    label.textContent = 'Listening…';
+  }
+
+  function stopRecordingUI(btn, icon, label){
+    recording = false;
+    btn.classList.remove('recording');
+    icon.textContent = '🎤';
+    label.textContent = 'Speak it instead';
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+
+  function setScale(v){
+    document.documentElement.style.setProperty('--fs-scale', v);
+    ['fsA','fsB','fsC'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if(v===1) document.getElementById('fsA').classList.add('active');
+    else if(v===1.22) document.getElementById('fsB').classList.add('active');
+    else document.getElementById('fsC').classList.add('active');
+  }
+  setScale(1);
+
+  let speaking = false;
+
+  function buildWarnSpeechText(){
+    const title = document.querySelector('#screen-warn .verdict-title')?.textContent.trim() || '';
+    const sub = document.getElementById('warnSub')?.textContent.trim() || '';
+    const messageText = document.getElementById('warnPreview')?.textContent.trim() || '';
+    const tacticsText = Array.from(document.querySelectorAll('#tacticList li'))
+      .map(li => li.textContent.trim().replace(/\s+/g, ' '))
+      .join('. ');
+    return [
+      title,
+      sub,
+      messageText ? `The message said: ${messageText}` : '',
+      tacticsText
+    ].filter(Boolean).join('. ');
+  }
+
+  function stopSpeaking(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+    speaking = false;
+    const btn = document.getElementById('listenBtn');
+    if(btn){
+      btn.classList.remove('speaking');
+      btn.textContent = '🔊 Read this out loud';
+    }
+  }
+
+  function toggleListen(){
+    const btn = document.getElementById('listenBtn');
+
+    if(!('speechSynthesis' in window)){
+      showToast("Sorry, this browser can't read text aloud.");
+      return;
+    }
+
+    if(speaking){
+      stopSpeaking();
+      return;
+    }
+
+    const text = buildWarnSpeechText();
+    if(!text) return;
+
+    window.speechSynthesis.cancel(); // clear anything queued/stuck first
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.lang = 'en-SG';
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    if(englishVoice) utterance.voice = englishVoice;
+
+    utterance.onstart = () => {
+      speaking = true;
+      btn.classList.add('speaking');
+      btn.textContent = '⏸ Reading aloud…';
+    };
+    utterance.onend = utterance.onerror = () => {
+      speaking = false;
+      btn.classList.remove('speaking');
+      btn.textContent = '🔊 Read this out loud';
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function openModal(){ document.getElementById('modalOverlay').classList.add('show'); }
+  function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+  function closeModalBg(e){ if(e.target.id === 'modalOverlay') closeModal(); }
+
+  // start on welcome screen with scam sample preloaded underneath
+  document.getElementById('msgBox').value = samples.scam;
+</script>
+
+</body>
+</html>
