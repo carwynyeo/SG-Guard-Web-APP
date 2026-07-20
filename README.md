@@ -123,7 +123,7 @@ a `429` rate-limit error, that's the free-tier quota, not a bug in this app;
 either wait a minute or switch `MODEL` in `server.js` to
 `gemini-3.1-flash-lite`, which tends to have the most generous free quota.
 
-## 6. Privacy note this matches your deck
+## 6. Privacy note 
 
 Each request to `/api/check` sends only that one message, photo, or voice
 transcript, for that one check — the backend doesn't write anything to a
@@ -134,7 +134,7 @@ https://ai.google.dev/gemini-api/terms). If this matters for your project's
 privacy claims, mention it explicitly in your writeup, or switch to a paid
 Gemini tier, where this doesn't apply.
 
-## 7. Known limitations to mention if asked
+## 7. Known limitations 
 
 - No rate limiting or auth — fine for a class demo, not for production.
 - No retry/backoff on API errors — a failed request just shows a toast
