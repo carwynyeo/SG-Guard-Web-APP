@@ -34,7 +34,7 @@ Every result ends in a **one-tap handoff to a trusted person**, keeping the AI a
 
 Lim & Tan (2003) · Ma (2023) · Zhai et al. (2025) · LaRubbio et al. (2025) · Roy & Nilizadeh (2024) · Singapore Police Force Annual Scam & Cybercrime Brief 2025
 
-*AI and Design — Final Project, 2026 · Carwyn Yeo · Lam Yan Yee*
+*AI and Design — Final Project, 2026 · Carwyn Yeo 
 
 ---
 
